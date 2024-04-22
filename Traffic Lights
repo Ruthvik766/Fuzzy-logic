@@ -1,0 +1,33 @@
+import numpy as np
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+
+# Define fuzzy variables
+vehicle_count = ctrl.Antecedent(np.arange(0, 101, 1), 'vehicle_count')
+time_green = ctrl.Consequent(np.arange(0, 61, 1), 'time_green')
+
+# Define membership functions for inputs
+vehicle_count['low'] = fuzz.trimf(vehicle_count.universe, [0, 0, 50])
+vehicle_count['medium'] = fuzz.trimf(vehicle_count.universe, [0, 50, 100])
+vehicle_count['high'] = fuzz.trimf(vehicle_count.universe, [50, 100, 100])
+
+# Define membership functions for output
+time_green['short'] = fuzz.trimf(time_green.universe, [0, 0, 30])
+time_green['medium'] = fuzz.trimf(time_green.universe, [0, 30, 60])
+time_green['long'] = fuzz.trimf(time_green.universe, [30, 60, 60])
+
+# Define rules
+rule1 = ctrl.Rule(vehicle_count['low'], time_green['long'])
+rule2 = ctrl.Rule(vehicle_count['medium'], time_green['medium'])
+rule3 = ctrl.Rule(vehicle_count['high'], time_green['short'])
+
+# Create control system
+traffic_light_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
+traffic_light = ctrl.ControlSystemSimulation(traffic_light_ctrl)
+
+# Pass input values and compute the output
+traffic_light.input['vehicle_count'] = 20  # Example input: low vehicle count
+traffic_light.compute()
+
+# Print output
+print("Recommended green light time:", traffic_light.output['time_green'])
